@@ -1,9 +1,11 @@
 import { RadarChartOutlined, QrcodeOutlined } from "@ant-design/icons";
-import { Layout, Menu } from "antd";
+import { Layout, Menu, Spin } from "antd";
 import { Link, Navigate, Route, Routes } from "react-router-dom";
 import styled from "styled-components";
-import GameOfLife from "./game-of-life/GameOfLife";
+
+import GameOfLife from "./game-of-life";
 import Mandelbrod from "./mandelbrod";
+import { useInitializeGo } from "./utils/useInitializeGo";
 
 const Logo = styled.div`
   height: 32px;
@@ -26,7 +28,25 @@ const Content = styled(Layout.Content)`
   padding: 24;
 `;
 
+const Centered = styled.div`
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  height: 100vh;
+  flex: 1;
+`;
+
 function App() {
+  const loaded = useInitializeGo();
+
+  if (!loaded) {
+    return (
+      <Centered>
+        <Spin size="large" />
+      </Centered>
+    );
+  }
+
   return (
     <StyledLayout>
       <Layout.Sider collapsed>
