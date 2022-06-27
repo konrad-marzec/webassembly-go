@@ -8,10 +8,15 @@ func add() js.Func {
 	})
 }
 
+func register() {
+	js.Global().Set("add", add())
+	js.Global().Set("mandelbrot", RunMandelbrot())
+}
+
 func main() {
 	ch := make(chan struct{}, 0)
 
-	js.Global().Set("add", add())
+	register()
 
 	<-ch
 }
