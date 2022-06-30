@@ -3,10 +3,12 @@ import { useWASMModule } from "../utils/useWASMModule";
 function Mandelbrot() {
   useWASMModule();
 
-  // @ts-expect-error
-  console.log(add?.(1, 1));
-
-  return <div>Mandelbrot</div>;
+  return (
+    <div>
+      Mandelbrot
+      <canvas id="mandelbrot-canvas" width={255} height={255} />
+    </div>
+  );
 }
 
 export default Mandelbrot;
