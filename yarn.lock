@@ -1244,6 +1244,11 @@
     minimatch "^3.1.2"
     strip-json-comments "^3.1.1"
 
+"@gaearon/lag-radar@^0.1.0":
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/@gaearon/lag-radar/-/lag-radar-0.1.0.tgz#b8de6daeb0318fd35b6ad74d5c891453153fd401"
+  integrity sha512-gRBjSuEG6HuyoXhy+yedPXlcGKyUNMlNpgKTncgfXwIi6ejt/0KuqOzck/geYqy8z02fuJrz1VjkF4EwH2Oq8g==
+
 "@humanwhocodes/config-array@^0.9.2":
   version "0.9.5"
   resolved "https://registry.yarnpkg.com/@humanwhocodes/config-array/-/config-array-0.9.5.tgz#2cbaf9a89460da24b5ca6531b8bbfc23e1df50c7"

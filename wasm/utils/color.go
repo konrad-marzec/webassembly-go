@@ -1,4 +1,4 @@
-package mandelbrot
+package utils
 
 import (
 	"image/color"
@@ -35,7 +35,7 @@ func hueToRGB(p, q, t float64) float64 {
 	}
 }
 
-func hslToRGB(h, s, l float64) color.RGBA {
+func HslToRGB(h, s, l float64) color.RGBA {
 	var r, g, b float64
 	if s == 0 {
 		r, g, b = l, l, l

@@ -6,6 +6,7 @@ import { Normalize } from "styled-normalize";
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
+import LagRadar from "./LagRadar";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
@@ -16,6 +17,7 @@ root.render(
     <BrowserRouter>
       <App />
     </BrowserRouter>
+    <LagRadar />
   </React.StrictMode>
 );
 

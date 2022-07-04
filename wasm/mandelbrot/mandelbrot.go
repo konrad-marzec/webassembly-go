@@ -5,7 +5,7 @@ import (
 	"math"
 	"syscall/js"
 
-	"github.com/llgcode/draw2d/draw2dimg"
+	"github.com/konrad-marzec/webassembly-go/utils"
 )
 
 type Pix struct {
@@ -39,30 +39,38 @@ const (
 	samples = 200
 
 	numBlocks  = 64
-	numThreads = 16
+	numThreads = 5
 )
 
 func RunMandelbrot() js.Func {
-	return js.FuncOf(func(this js.Value, args []js.Value) {
-		c, err := InitializeCanvas(args[0])
+	return js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+
+		id := args[0].String()
+		// cb := args[1]
+
+		c, err := utils.InitializeCanvas(id)
 
 		if err != nil {
-			return
+			return nil
 		}
 
-		imgWidth = c.width
-		imgHeight = c.height
-		pixelTotal = c.width * c.height
-		ratio = float64(c.width) / float64(c.height)
+		imgWidth = c.Width()
+		imgHeight = c.Height()
+		pixelTotal = c.Width() * c.Height()
+		ratio = float64(c.Width()) / float64(c.Height())
 
 		draw_buffer := make(chan Pix, pixelTotal)
 		thread_buffer := make(chan bool, numThreads)
 		work_buffer := make(chan WorkItem, numBlocks)
 
-		go workBufferInit(work_buffer, c)
-		go workersInit(draw_buffer, work_buffer, thread_buffer)
-		go drawThread(draw_buffer, c.gctx)
+		workBufferInit(work_buffer)
+		go workersInit(draw_buffer, work_buffer, thread_buffer, c)
+		go drawThread(draw_buffer, c)
 
+		// time.Sleep(120 * time.Second)
+		// c.Render()
+
+		return nil
 	})
 }
 
@@ -71,17 +79,22 @@ func workBufferInit(work_buffer chan WorkItem) {
 
 	for i := sqrt - 1; i >= 0; i-- {
 		for j := 0; j < sqrt; j++ {
+			initialX := i * (imgWidth / sqrt)
+			finalX := (i + 1) * (imgWidth / sqrt)
+			initialY := j * (imgHeight / sqrt)
+			finalY := (j + 1) * (imgHeight / sqrt)
+
 			work_buffer <- WorkItem{
-				initialX: i * (imgWidth / sqrt),
-				finalX:   (i + 1) * (imgWidth / sqrt),
-				initialY: j * (imgHeight / sqrt),
-				finalY:   (j + 1) * (imgHeight / sqrt),
+				initialX: initialX,
+				finalX:   finalX,
+				initialY: initialY,
+				finalY:   finalY,
 			}
 		}
 	}
 }
 
-func workersInit(draw_buffer chan Pix, work_buffer chan WorkItem, thread_buffer chan bool) {
+func workersInit(draw_buffer chan Pix, work_buffer chan WorkItem, thread_buffer chan bool, canvas *utils.Canvas) {
 	for i := 1; i <= numThreads; i++ {
 		thread_buffer <- true
 	}
@@ -90,6 +103,8 @@ func workersInit(draw_buffer chan Pix, work_buffer chan WorkItem, thread_buffer 
 		work_item := <-work_buffer
 
 		go workerThread(work_item, draw_buffer, thread_buffer)
+
+		// canvas.Render()
 	}
 }
 
@@ -99,8 +114,8 @@ func workerThread(work_item WorkItem, draw_buffer chan Pix, thread_buffer chan b
 			var colorR, colorG, colorB int
 
 			for k := 0; k < samples; k++ {
-				a := height*ratio*((float64(x)+RandFloat64())/float64(imgWidth)) + posX
-				b := height*((float64(y)+RandFloat64())/float64(imgHeight)) + posY
+				a := height*ratio*((float64(x)+utils.RandFloat64())/float64(imgWidth)) + posX
+				b := height*((float64(y)+utils.RandFloat64())/float64(imgHeight)) + posY
 				c := pixelColor(mandelbrotIteration(a, b, maxIter))
 
 				colorR += int(c.R)
@@ -122,11 +137,12 @@ func workerThread(work_item WorkItem, draw_buffer chan Pix, thread_buffer chan b
 	thread_buffer <- true
 }
 
-func drawThread(draw_buffer chan Pix, gctx draw2dimg.GraphicContext) {
+func drawThread(draw_buffer chan Pix, c *utils.Canvas) {
 	for i := range draw_buffer {
-		gctx.SetRGBA(i.x, i.y, color.RGBA{R: i.cr, G: i.cg, B: i.cb, A: 255})
-		// img.SetRGBA(i.x, i.y, color.RGBA{R: i.cr, G: i.cg, B: i.cb, A: 255})
-		// pixelCount++
+		color := color.RGBA{R: i.cr, G: i.cg, B: i.cb, A: 255}
+		c.SetRGBA(i.x, i.y, color)
+
+		c.Render()
 	}
 }
 
@@ -139,9 +155,8 @@ func mandelbrotIteration(a, b float64, maxIter int) (float64, int) {
 		if xx+yy > 4 {
 			return xx + yy, i
 		}
-		// xn+1 = x^2 - y^2 + a
+
 		x = xx - yy + a
-		// yn+1 = 2xy + b
 		y = 2*xy + b
 	}
 
@@ -153,8 +168,8 @@ func pixelColor(r float64, iter int) color.RGBA {
 
 	// https://pt.wikipedia.org/wiki/Conjunto_de_Mandelbrot
 	if r > 4 {
-		// return hslToRGB(float64(0.70)-float64(iter)/3500*r, 1, 0.5)
-		return hslToRGB(float64(iter)/100*r, 1, 0.5)
+		return utils.HslToRGB(float64(0.70)-float64(iter)/3500*r, 1, 0.5)
+		// return utils.HslToRGB(float64(iter)/100*r, 1, 0.5)
 	}
 
 	return inside_set

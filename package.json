@@ -6,7 +6,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "build:wasm": "GOOS=js GOARCH=wasm go build -o ./public/main.wasm"
   },
   "eslintConfig": {
     "extends": [
@@ -45,6 +46,7 @@
     "web-vitals": "^2.1.4"
   },
   "devDependencies": {
+    "@gaearon/lag-radar": "^0.1.0",
     "@types/styled-components": "^5.1.25"
   }
 }

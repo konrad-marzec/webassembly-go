@@ -1,6 +1,11 @@
 package main
 
-import "syscall/js"
+import (
+	"syscall/js"
+
+	"github.com/konrad-marzec/webassembly-go/mandelbrot"
+	"github.com/konrad-marzec/webassembly-go/test"
+)
 
 func add() js.Func {
 	return js.FuncOf(func(this js.Value, args []js.Value) interface{} {
@@ -10,7 +15,8 @@ func add() js.Func {
 
 func register() {
 	js.Global().Set("add", add())
-	js.Global().Set("mandelbrot", RunMandelbrot())
+	js.Global().Set("test", test.Test())
+	js.Global().Set("mandelbrot", mandelbrot.RunMandelbrot())
 }
 
 func main() {
