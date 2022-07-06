@@ -10,8 +10,6 @@ export function useWASMWorkers(n: number): Worker[] {
         new URL("../workers/wasm.worker.ts", import.meta.url)
       );
 
-      // worker.postMessage({ type: "INITIALIZE" });
-
       tmp.push(worker);
     }
 

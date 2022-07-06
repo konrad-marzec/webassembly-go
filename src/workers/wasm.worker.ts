@@ -2,7 +2,6 @@
 import "../wasm_exec";
 
 let instance: WebAssembly.WebAssemblyInstantiatedSource["instance"];
-let module: WebAssembly.WebAssemblyInstantiatedSource["module"];
 
 async function initialize() {
   const go = new self.Go();
@@ -14,23 +13,27 @@ async function initialize() {
   go.run(wasm.instance);
 
   instance = wasm.instance;
-  module = wasm.module;
 }
-
-// function onUpdate(params:type) {
-
-// }
-
-// function onUpdate(params:type) {
-
-// }
 
 addEventListener("message", async function (event) {
   if (!instance) {
     await initialize();
   }
 
-  console.log(self.add(1, 2));
+  const { sector, size } = event.data;
 
-  postMessage({ type: "DONE" });
+  self.mandelbrot(
+    size,
+    sector.x0,
+    sector.y0,
+    sector.x1,
+    sector.y1,
+    (...response) => {
+      if (response.length) {
+        postMessage({ type: "UPDATE", data: response });
+      } else {
+        postMessage({ type: "DONE" });
+      }
+    }
+  );
 });

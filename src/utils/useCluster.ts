@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useRef } from "react";
 
 import { useWASMWorkers } from "./useWASMWorkers";
 
@@ -8,6 +8,8 @@ interface Area {
   y0: number;
   y1: number;
 }
+
+const WORKERS = 8;
 
 function getSectors(count: number, size: number) {
   const sectorSize = Math.ceil(size / count);
@@ -42,47 +44,50 @@ function pickRandomSector(
   return [sector, [range[0] + 1, range[1]]];
 }
 
-export function useCluster<T extends { type: string }>(
-  size: number,
-  callback: (data: T) => void
-) {
-  const workers = useWASMWorkers(5);
-  const sectorsRef = useRef<Area[]>(getSectors(5, size));
+export function useCluster<T extends { type: string }>(size: number) {
+  const workers = useWASMWorkers(WORKERS);
+  const sectorsRef = useRef<Area[]>(getSectors(WORKERS * 3, size));
   const rangeRef = useRef<[number, number]>([0, sectorsRef.current.length - 1]);
 
-  const doWork = useCallback((worker: Worker) => {
-    if (rangeRef.current[0] >= rangeRef.current[1]) {
-      return;
-    }
+  const doWork = useCallback(
+    (worker: Worker) => {
+      if (rangeRef.current[0] > rangeRef.current[1]) {
+        return;
+      }
 
-    const [sector, range] = pickRandomSector(
-      rangeRef.current,
-      sectorsRef.current
-    );
+      const [sector, range] = pickRandomSector(
+        rangeRef.current,
+        sectorsRef.current
+      );
 
-    if (sector) {
-      rangeRef.current = range;
-      worker.postMessage(sector);
-    }
-  }, []);
+      if (sector) {
+        rangeRef.current = range;
+        worker.postMessage({ size, sector });
+      }
+    },
+    [size]
+  );
 
-  useEffect(() => {
-    if (!workers?.length) {
-      return;
-    }
+  return useCallback(
+    (callback: (data: T) => void) => {
+      if (!workers?.length) {
+        return;
+      }
 
-    workers.forEach((worker) => {
-      doWork(worker);
+      workers.forEach((worker) => {
+        doWork(worker);
 
-      worker.addEventListener("message", (e: MessageEvent<T>) => {
-        if (e.data.type === "DONE") {
-          doWork(worker);
-        }
+        worker.addEventListener("message", (e: MessageEvent<T>) => {
+          if (e.data.type === "DONE") {
+            doWork(worker);
+          }
 
-        if (e.data.type === "UPDATE") {
-          callback(e.data);
-        }
+          if (e.data.type === "UPDATE") {
+            callback(e.data);
+          }
+        });
       });
-    });
-  }, [workers, doWork, callback]);
+    },
+    [workers, doWork]
+  );
 }

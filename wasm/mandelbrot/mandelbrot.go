@@ -2,7 +2,6 @@ package mandelbrot
 
 import (
 	"image/color"
-	"math"
 	"syscall/js"
 
 	"github.com/konrad-marzec/webassembly-go/utils"
@@ -23,13 +22,6 @@ type WorkItem struct {
 	finalY   int
 }
 
-var (
-	imgWidth   int
-	imgHeight  int
-	pixelTotal int
-	ratio      float64
-)
-
 const (
 	posX   = -2
 	posY   = -1.2
@@ -37,85 +29,40 @@ const (
 
 	maxIter = 1000
 	samples = 200
-
-	numBlocks  = 64
-	numThreads = 5
 )
 
-func RunMandelbrot() js.Func {
+func Run() js.Func {
 	return js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		size := args[0].Int()
+		x0 := args[1].Int()
+		y0 := args[2].Int()
+		x1 := args[3].Int()
+		y1 := args[4].Int()
+		cb := args[5]
 
-		id := args[0].String()
-		// cb := args[1]
-
-		c, err := utils.InitializeCanvas(id)
-
-		if err != nil {
-			return nil
+		work_item := WorkItem{
+			initialX: x0,
+			initialY: y0,
+			finalX:   x1,
+			finalY:   y1,
 		}
 
-		imgWidth = c.Width()
-		imgHeight = c.Height()
-		pixelTotal = c.Width() * c.Height()
-		ratio = float64(c.Width()) / float64(c.Height())
-
-		draw_buffer := make(chan Pix, pixelTotal)
-		thread_buffer := make(chan bool, numThreads)
-		work_buffer := make(chan WorkItem, numBlocks)
-
-		workBufferInit(work_buffer)
-		go workersInit(draw_buffer, work_buffer, thread_buffer, c)
-		go drawThread(draw_buffer, c)
-
-		// time.Sleep(120 * time.Second)
-		// c.Render()
+		calculate_pixels(size, work_item, cb)
 
 		return nil
 	})
 }
 
-func workBufferInit(work_buffer chan WorkItem) {
-	sqrt := int(math.Sqrt(numBlocks))
+func calculate_pixels(size int, work_item WorkItem, callback js.Value) {
+	ratio := float64(size) / float64(size)
 
-	for i := sqrt - 1; i >= 0; i-- {
-		for j := 0; j < sqrt; j++ {
-			initialX := i * (imgWidth / sqrt)
-			finalX := (i + 1) * (imgWidth / sqrt)
-			initialY := j * (imgHeight / sqrt)
-			finalY := (j + 1) * (imgHeight / sqrt)
-
-			work_buffer <- WorkItem{
-				initialX: initialX,
-				finalX:   finalX,
-				initialY: initialY,
-				finalY:   finalY,
-			}
-		}
-	}
-}
-
-func workersInit(draw_buffer chan Pix, work_buffer chan WorkItem, thread_buffer chan bool, canvas *utils.Canvas) {
-	for i := 1; i <= numThreads; i++ {
-		thread_buffer <- true
-	}
-
-	for range thread_buffer {
-		work_item := <-work_buffer
-
-		go workerThread(work_item, draw_buffer, thread_buffer)
-
-		// canvas.Render()
-	}
-}
-
-func workerThread(work_item WorkItem, draw_buffer chan Pix, thread_buffer chan bool) {
 	for x := work_item.initialX; x < work_item.finalX; x++ {
 		for y := work_item.initialY; y < work_item.finalY; y++ {
 			var colorR, colorG, colorB int
 
 			for k := 0; k < samples; k++ {
-				a := height*ratio*((float64(x)+utils.RandFloat64())/float64(imgWidth)) + posX
-				b := height*((float64(y)+utils.RandFloat64())/float64(imgHeight)) + posY
+				a := height*ratio*((float64(x)+utils.RandFloat64())/float64(size)) + posX
+				b := height*((float64(y)+utils.RandFloat64())/float64(size)) + posY
 				c := pixelColor(mandelbrotIteration(a, b, maxIter))
 
 				colorR += int(c.R)
@@ -127,23 +74,11 @@ func workerThread(work_item WorkItem, draw_buffer chan Pix, thread_buffer chan b
 			cg := uint8(float64(colorG) / float64(samples))
 			cb := uint8(float64(colorB) / float64(samples))
 
-			draw_buffer <- Pix{
-				x, y, cr, cg, cb,
-			}
-
+			callback.Invoke(x, y, cr, cg, cb)
 		}
 	}
 
-	thread_buffer <- true
-}
-
-func drawThread(draw_buffer chan Pix, c *utils.Canvas) {
-	for i := range draw_buffer {
-		color := color.RGBA{R: i.cr, G: i.cg, B: i.cb, A: 255}
-		c.SetRGBA(i.x, i.y, color)
-
-		c.Render()
-	}
+	callback.Invoke()
 }
 
 func mandelbrotIteration(a, b float64, maxIter int) (float64, int) {

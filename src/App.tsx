@@ -1,11 +1,10 @@
 import { RadarChartOutlined, QrcodeOutlined } from "@ant-design/icons";
-import { Layout, Menu, Spin } from "antd";
+import { Layout, Menu, PageHeader } from "antd";
 import { Link, Navigate, Route, Routes } from "react-router-dom";
 import styled from "styled-components";
 
 import GameOfLife from "./game-of-life";
-import Mandelbrod from "./mandelbrod";
-import { useInitializeGo } from "./utils/useInitializeGo";
+import Mandelbrot from "./mandelbrot";
 
 const Logo = styled.div`
   height: 32px;
@@ -14,7 +13,7 @@ const Logo = styled.div`
 `;
 
 const StyledLayout = styled(Layout)`
-  height: 100vh;
+  min-height: 100vh;
 `;
 
 const Header = styled(Layout.Header)`
@@ -26,34 +25,20 @@ const Content = styled(Layout.Content)`
   background: #fff;
   margin: 24px 16px;
   padding: 24;
-`;
 
-const Centered = styled.div`
-  justify-content: center;
-  align-items: center;
   display: flex;
-  height: 100vh;
-  flex: 1;
+  align-items: center;
+  justify-content: center;
 `;
 
 function App() {
-  const loaded = useInitializeGo();
-
-  if (!loaded) {
-    return (
-      <Centered>
-        <Spin size="large" />
-      </Centered>
-    );
-  }
-
   return (
     <StyledLayout>
       <Layout.Sider collapsed>
         <Logo />
-        <Menu theme="dark" mode="inline" defaultSelectedKeys={["mandelbrod"]}>
-          <Menu.Item key="mandelbrod" icon={<RadarChartOutlined />}>
-            <Link to="mandelbrod">Mandelbrod</Link>
+        <Menu theme="dark" mode="inline" defaultSelectedKeys={["mandelbrot"]}>
+          <Menu.Item key="mandelbrot" icon={<RadarChartOutlined />}>
+            <Link to="mandelbrot">Mandelbrot</Link>
           </Menu.Item>
           <Menu.Item key="game-of-life" icon={<QrcodeOutlined />}>
             <Link to="game-of-life">Game of Life</Link>
@@ -61,14 +46,25 @@ function App() {
         </Menu>
       </Layout.Sider>
       <Layout>
-        <Header></Header>
+        <Header>
+          <Routes>
+            <Route
+              path="mandelbrot"
+              element={<PageHeader title="Mandelbrot" />}
+            />
+            <Route
+              path="game-of-life"
+              element={<PageHeader title="Game of Life" />}
+            />
+          </Routes>
+        </Header>
         <Content>
           <Routes>
-            <Route path="mandelbrod" element={<Mandelbrod />} />
+            <Route path="mandelbrot" element={<Mandelbrot />} />
             <Route path="game-of-life" element={<GameOfLife />} />
             <Route
               path="*"
-              element={<Navigate to="/mandelbrod" replace={true} />}
+              element={<Navigate to="/mandelbrot" replace={true} />}
             />
           </Routes>
         </Content>
