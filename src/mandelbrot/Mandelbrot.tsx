@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import styled from "styled-components";
 import { useCluster } from "../utils/useCluster";
 
-const SIZE = 512;
+const SIZE = 1024;
 
 const Canvas = styled.canvas`
   border-radius: 5px;

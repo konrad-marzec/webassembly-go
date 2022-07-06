@@ -9,7 +9,7 @@ interface Area {
   y1: number;
 }
 
-const WORKERS = 8;
+const WORKERS = navigator.hardwareConcurrency ?? 5;
 
 function getSectors(count: number, size: number) {
   const sectorSize = Math.ceil(size / count);
