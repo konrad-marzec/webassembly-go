@@ -2,7 +2,7 @@ import { useCallback, useRef } from "react";
 
 import { useWASMWorkers } from "./useWASMWorkers";
 
-interface Area {
+export interface Area {
   x0: number;
   x1: number;
   y0: number;
@@ -31,41 +31,22 @@ function getSectors(count: number, size: number) {
   return sectors;
 }
 
-function pickRandomSector(
-  range: [number, number],
-  sectors: Area[]
-): [Area, [number, number]] {
-  const idx = Math.round(Math.random() * (range[1] - range[0]) + range[0]);
-  const sector = sectors[idx];
-
-  sectors[idx] = sectors[range[0]];
-  sectors[range[0]] = sector;
-
-  return [sector, [range[0] + 1, range[1]]];
-}
-
-export function useCluster<T extends { type: string }>(size: number) {
+export function useCluster<T extends { type: string }>(
+  scheduler: (sectors: Area[]) => Area | undefined,
+  size: number
+) {
   const workers = useWASMWorkers(WORKERS);
   const sectorsRef = useRef<Area[]>(getSectors(WORKERS * 3, size));
-  const rangeRef = useRef<[number, number]>([0, sectorsRef.current.length - 1]);
 
   const doWork = useCallback(
     (worker: Worker) => {
-      if (rangeRef.current[0] > rangeRef.current[1]) {
-        return;
-      }
-
-      const [sector, range] = pickRandomSector(
-        rangeRef.current,
-        sectorsRef.current
-      );
+      const sector = scheduler(sectorsRef.current);
 
       if (sector) {
-        rangeRef.current = range;
         worker.postMessage({ size, sector });
       }
     },
-    [size]
+    [scheduler, size]
   );
 
   return useCallback(

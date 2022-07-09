@@ -1,18 +1,51 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import styled from "styled-components";
-import { useCluster } from "../utils/useCluster";
 
-const SIZE = 1024;
+import { Area, useCluster } from "../utils/useCluster";
+
+const SIZE = 256;
 
 const Canvas = styled.canvas`
   border-radius: 5px;
 `;
 
+// function pickNextSector(leftIndex: number, sectors: Area[]): [Area, number] {
+//   return [sectors[leftIndex], leftIndex + 1];
+// }
+
+function pickRandomSector(leftIndex: number, sectors: Area[]): [Area, number] {
+  const rightIndex = sectors.length - 1;
+
+  const idx = Math.round(Math.random() * (rightIndex - leftIndex) + leftIndex);
+  const sector = sectors[idx];
+
+  sectors[idx] = sectors[leftIndex];
+  sectors[leftIndex] = sector;
+
+  return [sector, leftIndex + 1];
+}
+
 function Mandelbrot() {
+  const leftIndexRef = useRef<number>(0);
+
+  const scheduler = useCallback((sectors: Area[]) => {
+    const rightIndex = sectors.length - 1;
+
+    if (leftIndexRef.current > rightIndex) {
+      return;
+    }
+
+    const [sector, leftIndex] = pickRandomSector(leftIndexRef.current, sectors);
+    // const [sector, leftIndex] = pickNextSector(leftIndexRef.current, sectors);
+    leftIndexRef.current = leftIndex;
+
+    return sector;
+  }, []);
+
   const start = useCluster<{
     type: string;
     data: [number, number, number, number, number];
-  }>(SIZE);
+  }>(scheduler, SIZE);
 
   const setRef = useCallback(
     (ref: HTMLCanvasElement | null) => {
