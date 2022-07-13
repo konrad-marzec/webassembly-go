@@ -1,0 +1,7 @@
+export enum WorkerAction {
+  SHARED_MEMORY = "SHARED_MEMORY",
+  GAME_OF_LIFE = "GAME_OF_LIFE",
+  MANDELBROT = "MANDELBROT",
+  UPDATE = "UPDATE",
+  DONE = "DONE",
+}

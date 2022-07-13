@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "start": "react-app-rewired start",
-    "build": "react-app-rewired build",
-    "test": "react-app-rewired test",
-    "build:wasm": "GOOS=js GOARCH=wasm go build -o ./public/main.wasm"
+    "start": "node scripts/start.js",
+    "build": "node scripts/build.js",
+    "test": "node scripts/test.js --env=jsdom",
+    "build:wasm": "GOOS=js GOARCH=wasm go build -o ../public/main.wasm"
   },
   "eslintConfig": {
     "extends": [

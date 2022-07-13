@@ -9,6 +9,7 @@ declare global {
       y1: number,
       callback: (x: number, y: number, r: number, g: number, b: number) => void
     ) => number;
+    gameOfLife: (board: Uint8Array, x: number, y: number) => 0 | 1;
   }
 }
 

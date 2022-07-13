@@ -19,6 +19,7 @@ export function useWASMWorkers(n: number): Worker[] {
       tmp.forEach((worker) => {
         worker.terminate();
       });
+      setWorkers([]);
     };
   }, [n]);
 

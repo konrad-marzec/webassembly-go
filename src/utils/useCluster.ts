@@ -1,4 +1,5 @@
 import { useCallback, useRef } from "react";
+import { WorkerAction } from "../constants/worker.constants";
 
 import { useWASMWorkers } from "./useWASMWorkers";
 
@@ -36,14 +37,17 @@ export function useCluster<T extends { type: string }>(
   size: number
 ) {
   const workers = useWASMWorkers(WORKERS);
-  const sectorsRef = useRef<Area[]>(getSectors(WORKERS * 3, size));
+  const sectorsRef = useRef<Area[]>(getSectors(WORKERS, size));
 
   const doWork = useCallback(
     (worker: Worker) => {
       const sector = scheduler(sectorsRef.current);
 
       if (sector) {
-        worker.postMessage({ size, sector });
+        worker.postMessage({
+          type: WorkerAction.MANDELBROT,
+          data: { size, sector },
+        });
       }
     },
     [scheduler, size]
@@ -59,11 +63,11 @@ export function useCluster<T extends { type: string }>(
         doWork(worker);
 
         worker.addEventListener("message", (e: MessageEvent<T>) => {
-          if (e.data.type === "DONE") {
+          if (e.data.type === WorkerAction.DONE) {
             doWork(worker);
           }
 
-          if (e.data.type === "UPDATE") {
+          if (e.data.type === WorkerAction.UPDATE) {
             callback(e.data);
           }
         });
