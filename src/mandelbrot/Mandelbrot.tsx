@@ -9,9 +9,9 @@ const Canvas = styled.canvas`
   border-radius: 5px;
 `;
 
-function pickNextSector(leftIndex: number, sectors: Area[]): [Area, number] {
-  return [sectors[leftIndex], leftIndex + 1];
-}
+// function pickNextSector(leftIndex: number, sectors: Area[]): [Area, number] {
+//   return [sectors[leftIndex], leftIndex + 1];
+// }
 
 function pickRandomSector(leftIndex: number, sectors: Area[]): [Area, number] {
   const rightIndex = sectors.length - 1;
@@ -35,8 +35,8 @@ function Mandelbrot() {
       return;
     }
 
-    // const [sector, leftIndex] = pickRandomSector(leftIndexRef.current, sectors);
-    const [sector, leftIndex] = pickNextSector(leftIndexRef.current, sectors);
+    const [sector, leftIndex] = pickRandomSector(leftIndexRef.current, sectors);
+    // const [sector, leftIndex] = pickNextSector(leftIndexRef.current, sectors);
     leftIndexRef.current = leftIndex;
 
     return sector;
